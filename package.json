@@ -13,7 +13,8 @@
     "build": "npm run clean && babel ./src --out-dir ./dist/esm --ignore \"**/*.test.js\"",
     "clean": "rimraf dist",
     "lint": "standard",
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "prepublishOnly": "npm run build"
   },
   "husky": {
     "hooks": {
