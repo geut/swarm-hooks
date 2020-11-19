@@ -1,6 +1,6 @@
 {
   "name": "@geut/swarm-hooks",
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "description": "Swarm hooks",
   "main": "dist/esm/swarm-hooks.js",
   "module": "dist/esm/swarm-hooks.js",
