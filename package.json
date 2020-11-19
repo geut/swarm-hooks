@@ -2,8 +2,8 @@
   "name": "@geut/swarm-hooks",
   "version": "1.0.0-beta.1",
   "description": "Swarm hooks",
-  "main": "dist/esm/swarm-hooks.js",
-  "module": "dist/esm/swarm-hooks.js",
+  "main": "dist/esm/index.js",
+  "module": "dist/esm/index.js",
   "files": [
     "dist"
   ],
@@ -13,13 +13,13 @@
     "lint": "standard",
     "precommit": "lint-staged"
   },
-  "lint-staged": {
-    "*.js": "npm run lint"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.js": "npm run lint"
   },
   "dependencies": {
     "@geut/discovery-swarm-webrtc": "^4.0.2"
@@ -46,6 +46,9 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
@@ -54,8 +57,5 @@
     "env": [
       "browser"
     ]
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

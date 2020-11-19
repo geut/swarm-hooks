@@ -26,34 +26,27 @@ export function SwarmProvider ({ children, config = {}, handlers = {} }) {
   )
 }
 
-export function useJoin (topic) {
-  const { swarm } = useContext(SwarmContext)
-  const [peers, setPeers] = useState({})
+export function useJoin (topic, swarmConfig = {}) {
+  const { swarm } = useSwarm(swarmConfig)
+  const [peers, setPeers] = useState([])
 
   useEffect(() => {
     swarm.join(Buffer.from(topic, 'hex'))
 
     swarm.on('connection', connectionHandler)
-    swarm.on('connection-close', connectionCloseHandler)
+    swarm.on('connection-close', connectionHandler)
 
     return function leave () {
       swarm.removeListener('connection', connectionHandler)
-      swarm.removeListener('connection-close', connectionCloseHandler)
+      swarm.removeListener('connection-close', connectionHandler)
 
       swarm.leave(Buffer.from(topic, 'hex'))
     }
   }, [topic])
 
-  function connectionHandler (peer) {
-    setPeers(peers => ({ ...peers, [peer._id]: peer }))
-  }
-
-  function connectionCloseHandler (peer) {
-    setPeers(peers => {
-      const newPeers = { ...peers }
-      delete newPeers[peer._id]
-      return newPeers
-    })
+  function connectionHandler () {
+    const peers = swarm.getPeers(Buffer.from(topic, 'hex'))
+    setPeers(peers)
   }
 
   return { swarm, peers }
