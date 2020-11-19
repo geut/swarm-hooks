@@ -5,7 +5,9 @@
   "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
   "files": [
-    "dist"
+    "dist",
+    "broadcast.js",
+    "swarm.js"
   ],
   "scripts": {
     "build": "npm run clean && babel ./src --out-dir ./dist/esm --ignore \"**/*.test.js\"",
@@ -22,7 +24,8 @@
     "*.js": "npm run lint"
   },
   "dependencies": {
-    "@geut/discovery-swarm-webrtc": "^4.0.2"
+    "@geut/discovery-swarm-webrtc": "^4.0.2",
+    "buffer-json-encoding": "^1.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
