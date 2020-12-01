@@ -44,7 +44,9 @@ export function useJoin (topic, swarmConfig = {}) {
     }
   }, [topic])
 
-  function connectionHandler () {
+  function connectionHandler (_, info) {
+    if (info.channel.toString('hex') !== topic.toString('hex')) return
+
     const peers = swarm.getPeers(Buffer.from(topic, 'hex'))
     setPeers(peers)
   }
