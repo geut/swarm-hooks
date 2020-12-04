@@ -23,16 +23,16 @@ export function useBroadcast (swarm, { topic } = {}) {
       peer.on('data', messageHandler)
     }
 
-    function connectionCloseHandler (peer) {
+    function connectionClosedHandler (peer) {
       peer.removeListener('data', messageHandler)
     }
 
     swarm.on('connection', connectionHandler)
-    swarm.on('connection-close', connectionCloseHandler)
+    swarm.on('connection-closed', connectionClosedHandler)
 
     return function () {
       swarm.removeListener('connection', connectionHandler)
-      swarm.removeListener('connection-close', connectionCloseHandler)
+      swarm.removeListener('connection-closed', connectionClosedHandler)
     }
   }, [swarm])
 
