@@ -31,32 +31,13 @@ export function useJoin (topic, swarmConfig = {}) {
   const [peers, setPeers] = useState([])
 
   useEffect(() => {
-    swarm.join(Buffer.from(topic, 'hex'))
-
-    console.log('join')
+    swarm.join(topic)
 
     function connectionHandler (_, info) {
       if (info.channel.toString('hex') !== topic.toString('hex')) return
 
-      console.log('peer', info.id.toString('hex'))
-      setPeers(currentPeers => {
-        console.log('1')
-        if (currentPeers.find(peer => peer.id.toString('hex') === info.id.toString('hex'))) {
-          return currentPeers
-        }
-        console.log('2')
-
-        return swarm.getPeers(Buffer.from(topic, 'hex'))
-      })
+      setPeers(swarm.getPeers(Buffer.from(topic, 'hex')))
     }
-
-    // function connectionCloseHandler (_, info) {
-    //   if (info.channel.toString('hex') !== topic.toString('hex')) return
-
-    //   console.log('peer-close', info.id.toString('hex'))
-    //   const peers = swarm.getPeers(Buffer.from(topic, 'hex'))
-    //   setPeers(peers)
-    // }
 
     swarm.on('connection', connectionHandler)
     swarm.on('connection-closed', connectionHandler)
@@ -65,7 +46,7 @@ export function useJoin (topic, swarmConfig = {}) {
       swarm.removeListener('connection', connectionHandler)
       swarm.removeListener('connection-closed', connectionHandler)
 
-      swarm.leave(Buffer.from(topic, 'hex'))
+      swarm.leave(topic)
     }
   }, [topic.toString('hex')])
 
