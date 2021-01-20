@@ -7,6 +7,7 @@
   "files": [
     "dist",
     "broadcast.js",
+    "swarm-provider.js",
     "swarm.js"
   ],
   "scripts": {
@@ -26,7 +27,8 @@
   },
   "dependencies": {
     "@geut/discovery-swarm-webrtc": "^4.0.2",
-    "buffer-json-encoding": "^1.0.2"
+    "buffer-json-encoding": "^1.0.2",
+    "use-deep-compare-effect": "^1.6.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",

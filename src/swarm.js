@@ -1,33 +1,25 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import useDeepCompareEffect from 'use-deep-compare-effect'
 
 import discoverySwarmWebrtc from '@geut/discovery-swarm-webrtc'
 
-const SwarmContext = createContext()
+import { SwarmContext } from './swarm-provider'
 
-export function SwarmProvider ({ children, config = {}, handlers = {} }) {
-  const swarm = discoverySwarmWebrtc(config)
+export function Swarm ({ id = 'default', config = {}, children }) {
+  const [swarm, setSwarm] = useState()
+  const { swarms } = useContext(SwarmContext)
 
-  useEffect(() => {
-    for (const event in handlers) {
-      swarm.on(event, handlers[event])
-    }
+  useDeepCompareEffect(() => {
+    const swarm = discoverySwarmWebrtc(config)
+    swarms.set(id, swarm)
+    setSwarm(swarm)
+  }, [config])
 
-    return function () {
-      for (const event in handlers) {
-        swarm.removeListener(event, handlers[event])
-      }
-    }
-  }, [])
-
-  return (
-    <SwarmContext.Provider value={{ swarm }}>
-      {children}
-    </SwarmContext.Provider>
-  )
+  return (swarm ? children : null)
 }
 
-export function useJoin (topic, swarmConfig = {}) {
-  const { swarm } = useSwarm(swarmConfig)
+export function useJoin ({ topic, id, replicator }) {
+  const { swarm } = useSwarm({ id, replicator })
   const [peers, setPeers] = useState([])
 
   useEffect(() => {
@@ -53,8 +45,10 @@ export function useJoin (topic, swarmConfig = {}) {
   return { swarm, peers }
 }
 
-export function useSwarm ({ replicator } = {}) {
-  const { swarm } = useContext(SwarmContext)
+export function useSwarm ({ id = 'default', replicator } = {}) {
+  const { swarms } = useContext(SwarmContext)
+
+  const swarm = swarms.get(id)
 
   useEffect(() => {
     if (!replicator) return
@@ -64,7 +58,7 @@ export function useSwarm ({ replicator } = {}) {
     return function () {
       swarm.removeListener('connection', replicator)
     }
-  }, [replicator])
+  }, [id, replicator])
 
   return { swarm }
 }
