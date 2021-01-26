@@ -26,7 +26,7 @@
     "*.js": "npm run lint"
   },
   "dependencies": {
-    "@geut/discovery-swarm-webrtc": "^4.0.2",
+    "@geut/discovery-swarm-webrtc": "^4.1.0",
     "buffer-json-encoding": "^1.0.2",
     "use-deep-compare-effect": "^1.6.1"
   },
