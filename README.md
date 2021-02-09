@@ -5,25 +5,195 @@
 
 [![Made by GEUT][geut-badge]][geut-url]
 
+[Discovery Swarm WebRTC](https://github.com/geut/discovery-swarm-webrtc) hooks for react.
+
+
+## Table of Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [API](#api)
+- [Issues](#issues)
+- [Contributing](#contributing)
+- [License](#license)
+
+
 ## Install
 
 ```
 $ npm install @geut/swarm-hooks
 ```
+or
+```
+$ yarn add @geut/swarm-hooks
+```
 
 ## Usage
 
 ```javascript
-// TODO
+// ./App.js
+
+import React from 'react'
+
+import { SwarmProvider, Swarm } from '@geut/swarm-hooks'
+
+import Peers from './components/Peers'
+
+function App () {
+  return (
+    <SwarmProvider>  
+      <Swarm id='cool-swarm' config={{ bootstrap: ['wss://geut-webrtc-signal-v3.herokuapp.com'] }}>
+        <Peers />
+      </Swarm>
+    </SwarmProvider>
+  )
+}
+
+export default App
 ```
+
+```javascript
+// ./components/Peers.js
+
+import React, { useEffect } from 'react'
+import crypto from 'crypto'
+
+import { useJoin } from '@geut/swarm-hooks'
+
+const someTopic = crypto.createHash('sha256')
+    .update('some-topic')
+    .digest()
+
+function Peers () {
+  const { peers, swarm } = useJoin({ id: 'cool-swarm', topic: someTopic })
+
+
+  useEffect(() => {
+    function onConnection (connection, info) {
+      console.log('New peer!', connection, info)
+    }
+    
+    function onConnectionClosed (connection, info) {
+      console.log('Peer disconnected', connection, info)
+    }
+
+    swarm.on('connection', onConnection)
+    swarm.on('connection-closed', onConnectionClosed)
+
+    return () => {
+      swarm.removeListener('connection', onConnection)
+      swarm.removeListener('connection-closed', onConnectionClosed)
+    }
+  }, [])
+
+  return (
+    <div>
+      <h1>Peers</h1>
+      <ul>
+        {peers.map(peer => <li>{peer.id.toString('hex')}</li>)}
+      </ul>
+    </div>
+  )
+}
+
+export default Peers
+```
+
+
+## Api
+
+### SwarmProvider
+Keeps reference to multiple swarms based on his config.
+
+#### children
+`ReactElement` | _required_
+
+React children.
+
+
+### Swarm
+Creates and provides an instance of [`discoverySwarmWebrtc`](https://github.com/geut/discovery-swarm-webrtc).
+
+#### id
+`string` | defaults to `'default'`
+
+Identifies your swarm for access it later with [`useSwarm`](#useSwarm).
+
+#### config
+`object`
+
+Object containing options as defined in [swarm creation](https://github.com/geut/discovery-swarm-webrtc#const-sw--swarmopts)
+
+#### children
+`ReactElement` | _required_
+
+React children.
+
+
+### useSwarm(options)
+Hook to get the swarm instance defined by `id`
+
+#### options
+`object` | _required_
+
+#### options.id
+`string` | defaults to `'default'`
+
+Identifies a `<Swarm />` previously created. `default` will be selected if no present.
+
+#### options.replicator
+`function`
+
+Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
+
+#### Returns an `object` with:
+
+#### `swarm`
+[`discoverySwarmWebrtc`](https://github.com/geut/discovery-swarm-webrtc) instance.
+
+### useJoin(options)
+Hook to join into a particular topic
+
+#### options
+`object` | _required_
+
+#### options.topic
+`Buffer` | _required_
+
+Topic to join.
+
+#### options.id
+`string` | defaults to `'default'`
+
+Identifies a `<Swarm />` previously created. `default` will be selected if no present.
+
+#### options.replicator
+`function`
+
+Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
+
+#### Returns an `object` with:
+
+#### `swarm`
+`DiscoverySwarmWebrtc`
+
+[`discoverySwarmWebrtc`](https://github.com/geut/discovery-swarm-webrtc) instance.
+
+#### `peers`
+`array`
+
+Array of connected peers. See [`getPeers`](https://github.com/geut/discovery-swarm-webrtc#const-arrayofpeers--swgetpeerschannel)
+
 
 ## Issues
 
 :bug: If you found an issue we encourage you to report it on [github](https://github.com/geut/swarm-hooks/issues). Please specify your OS and the actions to reproduce it.
 
+
 ## Contributing
 
 :busts_in_silhouette: Ideas and contributions to the project are welcome. You must follow this [guideline](https://github.com/geut/swarm-hooks/blob/main/CONTRIBUTING.md).
+
 
 ## License
 
