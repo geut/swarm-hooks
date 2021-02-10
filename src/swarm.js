@@ -60,7 +60,7 @@ export function Swarm ({ id = 'default', config = {}, children }) {
   return (swarm ? children : null)
 }
 
-export function useJoin ({ topic, id, replicate, onConnection, onDisconnection }) {
+export function useJoin ({ topic, id, condition = true, replicate, onConnection, onDisconnection }) {
   const { swarms } = useContext(SwarmContext)
   const ref = swarms.get(id)
 
@@ -69,7 +69,7 @@ export function useJoin ({ topic, id, replicate, onConnection, onDisconnection }
   const topicStr = topic.toString('hex')
 
   useEffect(() => {
-    if (!ref) return
+    if (!ref || !condition) return
 
     const { swarm } = ref
 
@@ -78,7 +78,7 @@ export function useJoin ({ topic, id, replicate, onConnection, onDisconnection }
     return function leave () {
       swarm.leave(topic).catch(() => {})
     }
-  }, [ref, topicStr, ref.swarm])
+  }, [ref, topicStr, ref.swarm, condition])
 
   useEffect(() => {
     if (!ref) return
