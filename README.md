@@ -41,7 +41,7 @@ import Peers from './components/Peers'
 
 function App () {
   return (
-    <SwarmProvider>  
+    <SwarmProvider>
       <Swarm id='cool-swarm' config={{ bootstrap: ['wss://geut-webrtc-signal-v3.herokuapp.com'] }}>
         <Peers />
       </Swarm>
@@ -72,7 +72,7 @@ function Peers () {
     function onConnection (connection, info) {
       console.log('New peer!', connection, info)
     }
-    
+
     function onConnectionClosed (connection, info) {
       console.log('Peer disconnected', connection, info)
     }
@@ -141,7 +141,7 @@ Hook to get the swarm instance defined by `id`
 
 Identifies a `<Swarm />` previously created. `default` will be selected if no present.
 
-#### options.replicator
+#### options.replicate
 `function`
 
 Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
@@ -167,7 +167,7 @@ Topic to join.
 
 Identifies a `<Swarm />` previously created. `default` will be selected if no present.
 
-#### options.replicator
+#### options.replicate
 `function`
 
 Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
