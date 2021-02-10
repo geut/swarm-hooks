@@ -52,9 +52,7 @@ export function Swarm ({ id = 'default', config = {}, children }) {
     return function close () {
       swarm.removeListener('connection', onConnection)
       swarm.removeListener('connection-closed', onDisconnection)
-      swarm.close().catch(err => {
-        console.error(err)
-      })
+      swarm.close().catch(() => {})
     }
   }, [config])
 
@@ -77,7 +75,7 @@ export function useJoin ({ topic, id, replicator, onConnection, onDisconnection 
     swarm.join(topic)
 
     return function leave () {
-      swarm.leave(topic)
+      swarm.leave(topic).catch(() => {})
       topicHandlers.delete(topic.toString('hex'))
       topicReplicators.delete(topic.toString('hex'))
     }
