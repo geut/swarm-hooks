@@ -13,14 +13,14 @@ export function Swarm ({ id = 'default', config = {}, children }) {
     const ref = swarms.get(id) || {
       defaultReplicator: null,
       topicHandlers: new Map(),
-      topicReplicator: new Map()
+      topicReplicators: new Map()
     }
 
     const swarm = discoverySwarmWebrtc(config)
 
     function onConnection (conn, info) {
       const topicStr = info.channel.toString('hex')
-      const replicatorHanlder = ref.topicReplicator.get(topicStr) || ref.defaultReplicator
+      const replicatorHanlder = ref.topicReplicators.get(topicStr) || ref.defaultReplicator
       const handler = ref.topicHandlers.get(info.channel.toString('hex'))
 
       if (!replicatorHanlder) {
@@ -72,12 +72,14 @@ export function useJoin ({ topic, id, replicator, onConnection, onDisconnection 
   useEffect(() => {
     if (!ref) return
 
-    const { swarm } = ref
+    const { swarm, topicHandlers, topicReplicators } = ref
 
     swarm.join(topic)
 
     return function leave () {
       swarm.leave(topic)
+      topicHandlers.delete(topic.toString('hex'))
+      topicReplicators.delete(topic.toString('hex'))
     }
   }, [ref, topicStr, ref.swarm])
 
@@ -103,11 +105,11 @@ export function useJoin ({ topic, id, replicator, onConnection, onDisconnection 
   useEffect(() => {
     if (!ref) return
 
-    const { topicReplicator } = ref
+    const { topicReplicators } = ref
 
-    topicReplicator.set(topicStr, (conn, info) => replicator(conn, info))
+    topicReplicators.set(topicStr, (conn, info) => replicator(conn, info))
     return () => {
-      topicReplicator.delete(topicStr)
+      topicReplicators.delete(topicStr)
     }
   }, [ref, topicStr, replicator])
 
