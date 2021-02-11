@@ -41,7 +41,7 @@ import Peers from './components/Peers'
 
 function App () {
   return (
-    <SwarmProvider>  
+    <SwarmProvider>
       <Swarm id='cool-swarm' config={{ bootstrap: ['wss://geut-webrtc-signal-v3.herokuapp.com'] }}>
         <Peers />
       </Swarm>
@@ -65,26 +65,15 @@ const someTopic = crypto.createHash('sha256')
     .digest()
 
 function Peers () {
-  const { peers, swarm } = useJoin({ id: 'cool-swarm', topic: someTopic })
+  const { peers, useSubscription } = useJoin({ id: 'cool-swarm', topic: someTopic })
 
+  useSubscription('connection', (connection, info) => {
+    console.log('New peer!', connection, info)
+  })
 
-  useEffect(() => {
-    function onConnection (connection, info) {
-      console.log('New peer!', connection, info)
-    }
-    
-    function onConnectionClosed (connection, info) {
-      console.log('Peer disconnected', connection, info)
-    }
-
-    swarm.on('connection', onConnection)
-    swarm.on('connection-closed', onConnectionClosed)
-
-    return () => {
-      swarm.removeListener('connection', onConnection)
-      swarm.removeListener('connection-closed', onConnectionClosed)
-    }
-  }, [])
+  useSubscription('connection', (connection, info) => {
+    console.log('Peer disconnected', connection, info)
+  })
 
   return (
     <div>
@@ -141,15 +130,20 @@ Hook to get the swarm instance defined by `id`
 
 Identifies a `<Swarm />` previously created. `default` will be selected if no present.
 
-#### options.replicator
-`function`
-
-Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
-
 #### Returns an `object` with:
 
 #### `swarm`
 [`discoverySwarmWebrtc`](https://github.com/geut/discovery-swarm-webrtc) instance.
+
+#### `peers`
+`array`
+
+Array of connected peers. See [`getPeers`](https://github.com/geut/discovery-swarm-webrtc#const-arrayofpeers--swgetpeerschannel)
+
+#### `useSubscription`
+
+#### `useHypercoreProtocol`
+`(conn, info) => HypercoreProtocol`
 
 ### useJoin(options)
 Hook to join into a particular topic
@@ -167,11 +161,6 @@ Topic to join.
 
 Identifies a `<Swarm />` previously created. `default` will be selected if no present.
 
-#### options.replicator
-`function`
-
-Function executed on new connections. It allows to replicate an `hypercore` for example. See [`swarm.on('connection', function (connection, info)) { ... }`](https://github.com/geut/discovery-swarm-webrtc#swonconnection-functionconnection-info---) for usage.
-
 #### Returns an `object` with:
 
 #### `swarm`
@@ -184,6 +173,10 @@ Function executed on new connections. It allows to replicate an `hypercore` for 
 
 Array of connected peers. See [`getPeers`](https://github.com/geut/discovery-swarm-webrtc#const-arrayofpeers--swgetpeerschannel)
 
+#### `useSubscription`
+
+#### `useHypercoreProtocol`
+`(conn, info) => HypercoreProtocol`
 
 ## Issues
 

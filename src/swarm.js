@@ -10,55 +10,144 @@ export function Swarm ({ id = 'default', config = {}, children }) {
   const { swarms } = useContext(SwarmContext)
 
   useDeepCompareEffect(() => {
-    const swarm = discoverySwarmWebrtc(config)
-    swarms.set(id, swarm)
+    const swarmRef = swarms.get(id) || {
+      protocolHandlerByTopic: new Map(),
+      defaultProtocolHandler: null,
+      events: new Set()
+    }
+
+    const swarm = swarmRef.swarm = discoverySwarmWebrtc(config)
+
+    function onConnection (conn, info) {
+      const { protocolHandlerByTopic, defaultProtocolHandler, events } = swarmRef
+
+      const onConnectionEvents = Array.from(events.values()).filter(event => event.name === 'connection' && (!event.topic || event.topic.equals(info.channel)))
+      const protocolHandler = protocolHandlerByTopic.get(info.channel.toString('hex')) || defaultProtocolHandler
+
+      if (!protocolHandler) return emit(conn, info)
+
+      const protocol = protocolHandler(conn, info)
+      if (!protocol) return emit(conn, info)
+
+      conn.protocol = protocol
+      protocol.once('handshake', () => {
+        emit(conn, info)
+      })
+
+      function emit (conn, info) {
+        onConnectionEvents.forEach(event => {
+          event.callback(conn, info)
+        })
+      }
+    }
+
+    function onDisconnection (conn, info) {
+      const { events } = swarmRef
+
+      const onDisconnectionEvents = Array.from(events.values()).filter(event => event.name === 'connection-closed' && (!event.topic || event.topic.equals(info.channel)))
+      onDisconnectionEvents.forEach(event => {
+        event.callback(conn, info)
+      })
+    }
+
+    swarm.on('connection', onConnection)
+    swarm.on('connection-closed', onDisconnection)
+
+    swarms.set(id, swarmRef)
     setSwarm(swarm)
+
+    return function close () {
+      swarm.removeListener('connection', onConnection)
+      swarm.removeListener('connection-closed', onDisconnection)
+      swarm.close().catch(() => {})
+    }
   }, [config])
 
   return (swarm ? children : null)
 }
 
-export function useJoin ({ topic, id, replicator }) {
-  const { swarm } = useSwarm({ id, replicator })
+function swarmSubscription (swarmRef, topic) {
+  return function useSubscription (name, handler, deps = []) {
+    useEffect(() => {
+      const { events } = swarmRef
+
+      const event = {
+        name,
+        callback (conn, info) {
+          handler(conn, info)
+        },
+        topic
+      }
+
+      events.add(event)
+      return () => {
+        events.delete(event)
+      }
+    }, [topic?.toString('hex'), name, ...deps])
+  }
+}
+
+export function useJoin ({ topic, id }) {
+  const { swarms } = useContext(SwarmContext)
+
+  const swarmRef = swarms.get(id)
+
   const [peers, setPeers] = useState([])
 
+  const useSubscription = swarmSubscription(swarmRef, topic)
+
   useEffect(() => {
-    swarm.join(topic)
-
-    function connectionHandler (_, info) {
-      if (info.channel.toString('hex') !== topic.toString('hex')) return
-
-      setPeers(swarm.getPeers(Buffer.from(topic, 'hex')))
-    }
-
-    swarm.on('connection', connectionHandler)
-    swarm.on('connection-closed', connectionHandler)
-
+    swarmRef.swarm.join(topic)
     return function leave () {
-      swarm.removeListener('connection', connectionHandler)
-      swarm.removeListener('connection-closed', connectionHandler)
-
-      swarm.leave(topic)
+      swarmRef.swarm.leave(topic).catch(() => {})
     }
   }, [topic.toString('hex')])
 
-  return { swarm, peers }
+  const useHypercoreProtocol = (handler, deps = []) => {
+    useEffect(() => {
+      swarmRef.protocolHandlerByTopic.set(topic.toString('hex'), handler)
+      return () => {
+        swarmRef.protocolHandlerByTopic.delete(topic.toString('hex'))
+      }
+    }, [topic.toString('hex'), ...deps])
+  }
+
+  useSubscription('connection', () => {
+    setPeers(swarmRef.swarm.getPeers(topic))
+  })
+
+  useSubscription('connection-closed', () => {
+    setPeers(swarmRef.swarm.getPeers(topic))
+  })
+
+  return { swarm: swarmRef.swarm, peers, useSubscription, useHypercoreProtocol }
 }
 
-export function useSwarm ({ id = 'default', replicator } = {}) {
+export function useSwarm ({ id = 'default' } = {}) {
   const { swarms } = useContext(SwarmContext)
 
-  const swarm = swarms.get(id)
+  const swarmRef = swarms.get(id)
 
-  useEffect(() => {
-    if (!replicator) return
+  const [peers, setPeers] = useState([])
 
-    swarm.on('connection', replicator)
+  const useSubscription = swarmSubscription(swarmRef)
 
-    return function () {
-      swarm.removeListener('connection', replicator)
-    }
-  }, [id, replicator])
+  const useHypercoreProtocol = (handler, deps = []) => {
+    useEffect(() => {
+      swarmRef.defaultProtocolHandler = handler
+      return () => {
+        swarmRef.defaultProtocolHandler = null
+      }
+    }, deps)
+  }
 
-  return { swarm }
+  useSubscription('connection', () => {
+    setPeers(swarmRef.swarm.getPeers())
+  })
+
+  useSubscription('connection-closed', () => {
+    setPeers(swarmRef.swarm.getPeers())
+  })
+
+  return { swarm: swarmRef.swarm, peers, useSubscription, useHypercoreProtocol }
 }
