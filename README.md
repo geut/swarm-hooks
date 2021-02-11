@@ -71,7 +71,7 @@ function Peers () {
     console.log('New peer!', connection, info)
   })
 
-  useSubscription('connection', (connection, info) => {
+  useSubscription('connection-closed', (connection, info) => {
     console.log('Peer disconnected', connection, info)
   })
 
