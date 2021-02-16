@@ -21,11 +21,11 @@
 ## Install
 
 ```
-$ npm install @geut/swarm-hooks
+$ npm install @geut/swarm-hooks @geut/discovery-swarm-webrtc
 ```
 or
 ```
-$ yarn add @geut/swarm-hooks
+$ yarn add @geut/swarm-hooks @geut/discovery-swarm-webrtc
 ```
 
 ## Usage
