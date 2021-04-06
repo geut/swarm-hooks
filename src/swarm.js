@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react'
 import useDeepCompareEffect from 'use-deep-compare-effect'
 
 import discoverySwarmWebrtc from '@geut/discovery-swarm-webrtc'
@@ -87,7 +87,7 @@ function swarmSubscription (swarmRef, topic) {
   }
 }
 
-export function useJoin ({ topic, id }) {
+export function useJoin ({ topic, id, join = true }) {
   const { swarms } = useContext(SwarmContext)
 
   const swarmRef = swarms.get(id)
@@ -97,11 +97,14 @@ export function useJoin ({ topic, id }) {
   const useSubscription = swarmSubscription(swarmRef, topic)
 
   useEffect(() => {
-    swarmRef.swarm.join(topic)
+    if (join) {
+      swarmRef.swarm.join(topic)
+    }
+
     return function leave () {
       swarmRef.swarm.leave(topic).catch(() => {})
     }
-  }, [topic.toString('hex')])
+  }, [join, topic.toString('hex')])
 
   const useHypercoreProtocol = (handler, deps = []) => {
     useEffect(() => {
@@ -120,7 +123,15 @@ export function useJoin ({ topic, id }) {
     setPeers(swarmRef.swarm.getPeers(topic))
   })
 
-  return { swarm: swarmRef.swarm, peers, useSubscription, useHypercoreProtocol }
+  const joinHandler = useCallback(() => {
+    swarmRef.swarm.join(topic)
+  }, [topic.toString('hex')])
+
+  const leaveHandler = useCallback(() => {
+    swarmRef.swarm.leave(topic)
+  }, [topic.toString('hex')])
+
+  return { swarm: swarmRef.swarm, peers, useSubscription, useHypercoreProtocol, join: joinHandler, leave: leaveHandler }
 }
 
 export function useSwarm ({ id = 'default' } = {}) {
